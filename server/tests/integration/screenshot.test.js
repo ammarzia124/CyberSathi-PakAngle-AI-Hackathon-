@@ -114,7 +114,8 @@ describe("Screenshot Analysis (Orchestrator)", () => {
       expect(result.deterministic.threatLevel).toBe("Low");
       expect(result.aiResult).toBeDefined();
       expect(result.timeline).toBeDefined();
-      expect(result.timeline.events.length).toBeGreaterThanOrEqual(4);
+      expect(Array.isArray(result.timeline)).toBe(true);
+      expect(result.timeline.length).toBeGreaterThanOrEqual(4);
       expect(result.urls).toEqual([]);
     } finally {
       cleanupTempFile(tempPath);
@@ -256,7 +257,7 @@ describe("Screenshot Analysis (Orchestrator)", () => {
     const tempPath = createTempImage();
     try {
       const result = await orch.analyzeScreenshot(tempPath);
-      const events = result.timeline.events.map((t) => t.name);
+      const events = result.timeline.map((t) => t.name);
       expect(events.some((e) => e.includes("Input received"))).toBe(true);
     } finally {
       cleanupTempFile(tempPath);

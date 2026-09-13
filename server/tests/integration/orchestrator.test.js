@@ -84,7 +84,8 @@ describe("AnalysisOrchestrator", () => {
       expect(result.deterministic.threatLevel).toBe("Suspicious");
       expect(result.aiResult.adjustedScore).toBe(42);
       expect(result.timeline).toBeDefined();
-      expect(result.timeline.events.length).toBeGreaterThanOrEqual(5);
+      expect(Array.isArray(result.timeline)).toBe(true);
+      expect(result.timeline.length).toBeGreaterThanOrEqual(5);
       expect(result.urls.some((u) => u.includes("example.com"))).toBe(true);
     });
 
@@ -96,7 +97,7 @@ describe("AnalysisOrchestrator", () => {
       });
 
       const result = await orch.analyzeUrl("https://example.com");
-      const events = result.timeline.events.map((t) => t.name);
+      const events = result.timeline.map((t) => t.name);
 
       expect(events.some((e) => e.includes("Input received"))).toBe(true);
       expect(events.some((e) => e.includes("URLs/domains"))).toBe(true);
