@@ -15,4 +15,8 @@ for (const key of required) {
   }
 }
 
+if (env.NODE_ENV === "production" && !env.OPENAI_API_KEY) {
+  console.warn("WARNING: OPENAI_API_KEY is not set. AI analysis will use fallback responses.");
+}
+
 export { env };

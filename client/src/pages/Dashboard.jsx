@@ -38,6 +38,9 @@ export default function Dashboard() {
     );
   }
 
+  const dist = analytics?.threatDistribution || {};
+  const distEntries = Object.entries(dist);
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -54,12 +57,25 @@ export default function Dashboard() {
           />
           <StatsCard
             title="Threat Types"
-            value={analytics?.threatDistribution ? Object.keys(analytics.threatDistribution).length : 0}
+            value={distEntries.length}
           />
         </div>
 
+        {distEntries.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {distEntries.map(([level, count]) => (
+              <StatsCard
+                key={level}
+                title={level}
+                value={count}
+                subtitle="scans"
+              />
+            ))}
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow p-6">
-          <ThreatChart data={analytics?.threatDistribution || {}} />
+          <ThreatChart data={dist} />
         </div>
 
         {analytics?.recentScans && analytics.recentScans.length > 0 && (

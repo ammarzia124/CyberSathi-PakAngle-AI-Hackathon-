@@ -22,7 +22,7 @@ app.use(cors({ origin: corsOrigins, credentials: true }));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan("combined"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

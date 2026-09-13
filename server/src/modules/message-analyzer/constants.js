@@ -1,5 +1,5 @@
 export const MESSAGE_ANALYZER_CONSTANTS = {
-  URDU_SCAM_KEYWORDS: ["فوری", "رقم", "انعام", "لاٹری", "vented", "account"],
+  URDU_SCAM_KEYWORDS: ["فوری", "رقم", "انعام", "لاٹری"],
   ENGLISH_SCAM_KEYWORDS: [
     "congratulations",
     "you have won",
