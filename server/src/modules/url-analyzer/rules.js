@@ -98,6 +98,17 @@ export function applyRules(normalizedUrl) {
     riskScore += 25;
   }
 
+  if (normalizedUrl.protocol === "http:" && hostname !== "localhost") {
+    indicators.push({
+      type: "insecure-protocol",
+      severity: "medium",
+      description: "URL uses HTTP instead of HTTPS (unencrypted connection)",
+      evidence: normalizedUrl.normalized,
+    });
+    suspiciousPatterns.push("insecure-protocol");
+    riskScore += 10;
+  }
+
   riskScore = Math.min(100, riskScore);
 
   return { indicators, suspiciousPatterns, riskScore, domains };
