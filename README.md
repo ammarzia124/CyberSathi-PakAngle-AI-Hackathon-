@@ -5,7 +5,7 @@ AI Digital Safety Agent for Pakistan. Analyzes URLs, messages, screenshots, and 
 ## Structure
 
 - `client/` — React + Vite + Tailwind
-- `server/` — Node.js + Express + MongoDB + Mongoose
+- `server/` — Node.js + Express + Supabase
 - `docs/` — API contracts, integration handoffs, architecture
 
 ## Quick Start

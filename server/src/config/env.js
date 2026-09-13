@@ -4,7 +4,6 @@ const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 
 const env = {
   PORT: parseInt(process.env.PORT, 10) || 3001,
-  MONGODB_URI: process.env.MONGODB_URI,
   SUPABASE_URL: process.env.SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
