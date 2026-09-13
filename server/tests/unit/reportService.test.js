@@ -1,5 +1,14 @@
 import { ReportService, createReport } from "../../src/services/ReportService.js";
 
+jest.mock("../../src/config/database.js", () => ({
+  supabase: {
+    from: () => ({
+      insert: async () => ({ error: null }),
+    }),
+  },
+  isSupabaseConnected: async () => true,
+}));
+
 function createMockReportModel() {
   return {
     create: async (data) => ({ ...data, _id: "mock-id" }),

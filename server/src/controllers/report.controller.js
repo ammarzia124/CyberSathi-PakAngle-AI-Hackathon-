@@ -1,20 +1,14 @@
-import { Report } from "../models/Report.js";
 import { ReportService } from "../services/ReportService.js";
 import { UrduTranslationService } from "../services/UrduTranslationService.js";
 import { NotFoundError, ValidationError } from "../utils/errors.js";
-import mongoose from "mongoose";
-
-function isDbConnected() {
-  return mongoose.connection.readyState === 1;
-}
+import { isSupabaseConnected } from "../config/database.js";
 
 export function createReportController(deps = {}) {
-  const reportModel = deps.reportModel || Report;
-  const reportService = deps.reportService || new ReportService({ reportModel });
+  const reportService = deps.reportService || new ReportService();
   const urduService = deps.urduService || new UrduTranslationService();
 
   const getReport = async (req, res, next) => {
-    if (!isDbConnected()) {
+    if (!(await isSupabaseConnected())) {
       return res.status(503).json({ error: "Database unavailable", statusCode: 503 });
     }
 
@@ -32,7 +26,7 @@ export function createReportController(deps = {}) {
   };
 
   const getReportUrdu = async (req, res, next) => {
-    if (!isDbConnected()) {
+    if (!(await isSupabaseConnected())) {
       return res.status(503).json({ error: "Database unavailable", statusCode: 503 });
     }
 

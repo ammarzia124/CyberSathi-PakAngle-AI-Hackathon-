@@ -1,15 +1,10 @@
-import { Report } from "../models/Report.js";
-import mongoose from "mongoose";
+import { supabase, isSupabaseConnected } from "../config/database.js";
 
 const cache = { data: null, timestamp: 0 };
 const CACHE_TTL = 60 * 1000;
 
-function isDbConnected() {
-  return mongoose.connection.readyState === 1;
-}
-
 export const getAnalytics = async (req, res, next) => {
-  if (!isDbConnected()) {
+  if (!(await isSupabaseConnected())) {
     return res.json({
       totalScans: 0,
       threatDistribution: {},
@@ -24,30 +19,38 @@ export const getAnalytics = async (req, res, next) => {
       return res.json(cache.data);
     }
 
-    const [totalScans, threatDistribution, avgResult, recentScans] =
-      await Promise.all([
-        Report.countDocuments(),
-        Report.aggregate([
-          { $group: { _id: "$threatLevel", count: { $sum: 1 } } },
-        ]),
-        Report.aggregate([
-          { $group: { _id: null, avg: { $avg: "$riskScore" } } },
-        ]),
-        Report.find()
-          .sort({ createdAt: -1 })
-          .limit(7)
-          .select("createdAt riskScore threatLevel")
-          .lean(),
-      ]);
+    const [totalResult, threatResult, scoresResult, recentResult] = await Promise.all([
+      supabase.from("reports").select("*", { count: "exact", head: true }),
+      supabase.from("reports").select("threat_level"),
+      supabase.from("reports").select("risk_score"),
+      supabase.from("reports")
+        .select("created_at, risk_score, threat_level")
+        .order("created_at", { ascending: false })
+        .limit(7),
+    ]);
 
-    const avgRiskScore = avgResult.length > 0 ? Math.round(avgResult[0].avg * 10) / 10 : null;
+    const totalScans = totalResult.count || 0;
+
+    const threatRows = threatResult.data || [];
+    const threatDistribution = threatRows.reduce((acc, row) => {
+      acc[row.threat_level] = (acc[row.threat_level] || 0) + 1;
+      return acc;
+    }, {});
+
+    const scoreRows = scoresResult.data || [];
+    const avgRiskScore = scoreRows.length > 0
+      ? Math.round((scoreRows.reduce((sum, r) => sum + r.risk_score, 0) / scoreRows.length) * 10) / 10
+      : null;
+
+    const recentScans = (recentResult.data || []).map((row) => ({
+      createdAt: row.created_at,
+      riskScore: row.risk_score,
+      threatLevel: row.threat_level,
+    }));
 
     const result = {
       totalScans,
-      threatDistribution: threatDistribution.reduce((acc, item) => {
-        acc[item._id] = item.count;
-        return acc;
-      }, {}),
+      threatDistribution,
       avgRiskScore,
       recentScans,
     };

@@ -1,6 +1,7 @@
 import { jest } from "@jest/globals";
 
-process.env.MONGODB_URI = "mongodb://localhost:27017/test";
+process.env.SUPABASE_URL = "https://smnygafwwkiscugayuff.supabase.co";
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-key";
 process.env.OPENAI_API_KEY = "";
 
 jest.setTimeout(30000);

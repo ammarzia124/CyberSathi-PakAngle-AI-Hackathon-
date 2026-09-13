@@ -1,7 +1,8 @@
 import { UrduTranslationService } from "../../src/services/UrduTranslationService.js";
 
 beforeAll(() => {
-  process.env.MONGODB_URI = "mongodb://localhost:27017/test";
+  process.env.SUPABASE_URL = "https://smnygafwwkiscugayuff.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-key";
 });
 
 function createMockFetch(responseBody, options = {}) {

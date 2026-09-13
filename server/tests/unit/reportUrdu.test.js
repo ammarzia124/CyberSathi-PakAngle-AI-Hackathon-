@@ -1,18 +1,15 @@
 import { jest } from "@jest/globals";
 import { createReportController } from "../../src/controllers/report.controller.js";
-import mongoose from "mongoose";
 
-let originalReadyState;
-
-beforeAll(() => {
-  process.env.MONGODB_URI = "mongodb://localhost:27017/test";
-  originalReadyState = mongoose.connection.readyState;
-  mongoose.connection.readyState = 1;
-});
-
-afterAll(() => {
-  mongoose.connection.readyState = originalReadyState;
-});
+jest.mock("../../src/config/database.js", () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+      update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+    }),
+  },
+  isSupabaseConnected: async () => true,
+}));
 
 function createMockReportService(findResult, updateResult) {
   return {
@@ -176,7 +173,10 @@ describe("Report Urdu Endpoint", () => {
     });
 
     it("returns 503 when database is unavailable", async () => {
-      mongoose.connection.readyState = 0;
+      const { isSupabaseConnected } = await import("../../src/config/database.js");
+      const originalFn = isSupabaseConnected;
+      const dbModule = await import("../../src/config/database.js");
+      dbModule.isSupabaseConnected = async () => false;
 
       const controller = createReportController({
         reportService: createMockReportService(sampleReport, null),
@@ -192,7 +192,7 @@ describe("Report Urdu Endpoint", () => {
       expect(res.statusCode).toBe(503);
       expect(res.body.error).toBe("Database unavailable");
 
-      mongoose.connection.readyState = 1;
+      dbModule.isSupabaseConnected = originalFn;
     });
 
     it("returns 500 when persisting translation fails", async () => {

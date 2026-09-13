@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { Report } from "../models/Report.js";
+import { supabase } from "../config/database.js";
 import { ValidationError } from "../utils/errors.js";
 
 const VALID_INPUT_TYPES = ["url", "message", "screenshot", "combined"];
@@ -79,11 +79,42 @@ function filterInternalFields(report) {
   return filtered;
 }
 
-export class ReportService {
-  constructor(deps = {}) {
-    this.reportModel = deps.reportModel || Report;
-  }
+function reportToRow(report) {
+  return {
+    report_id: report.reportId,
+    input_type: report.inputType,
+    risk_score: report.riskScore,
+    threat_level: report.threatLevel,
+    threat_type: report.threatType,
+    indicators: report.indicators,
+    explanation: report.explanation,
+    recommended_actions: report.recommendedActions,
+    urls: report.urls,
+    investigation_timeline: report.investigationTimeline,
+    urdu_explanation: report.urduExplanation,
+    created_at: report.createdAt,
+    updated_at: new Date().toISOString(),
+  };
+}
 
+function rowToReport(row) {
+  return {
+    reportId: row.report_id,
+    inputType: row.input_type,
+    riskScore: row.risk_score,
+    threatLevel: row.threat_level,
+    threatType: row.threat_type,
+    indicators: row.indicators,
+    explanation: row.explanation,
+    recommendedActions: row.recommended_actions,
+    urls: row.urls,
+    investigationTimeline: row.investigation_timeline,
+    urduExplanation: row.urdu_explanation,
+    createdAt: row.created_at,
+  };
+}
+
+export class ReportService {
   async createReport(input) {
     validateInput(input);
 
@@ -116,19 +147,15 @@ export class ReportService {
 
     let persisted = false;
     try {
-      await this.reportModel.create(report);
-      persisted = true;
-    } catch (error) {
-      if (
-        error.name === "MongoNetworkError" ||
-        error.name === "MongoServerError" ||
-        error.message?.includes("buffering timed out") ||
-        error.message?.includes("buffering")
-      ) {
-        console.warn("MongoDB unavailable — report not persisted");
+      const row = reportToRow(report);
+      const { error } = await supabase.from("reports").insert(row);
+      if (error) {
+        console.warn("Supabase insert failed — report not persisted:", error.message);
       } else {
-        console.error("Report persistence error:", error.message);
+        persisted = true;
       }
+    } catch (error) {
+      console.error("Report persistence error:", error.message);
     }
 
     return filterInternalFields(report);
@@ -137,10 +164,13 @@ export class ReportService {
   async findByReportId(reportId) {
     if (!reportId || typeof reportId !== "string") return null;
     try {
-      const doc = await this.reportModel.findOne({ reportId }).lean();
-      if (!doc) return null;
-      const { _id, __v, ...shape } = doc;
-      return shape;
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("report_id", reportId)
+        .single();
+      if (error || !data) return null;
+      return rowToReport(data);
     } catch {
       return null;
     }
@@ -150,14 +180,14 @@ export class ReportService {
     if (!reportId || typeof reportId !== "string") return null;
     if (typeof urduExplanation !== "string") return null;
     try {
-      const doc = await this.reportModel.findOneAndUpdate(
-        { reportId },
-        { urduExplanation },
-        { new: true }
-      ).lean();
-      if (!doc) return null;
-      const { _id, __v, ...shape } = doc;
-      return shape;
+      const { data, error } = await supabase
+        .from("reports")
+        .update({ urdu_explanation: urduExplanation, updated_at: new Date().toISOString() })
+        .eq("report_id", reportId)
+        .select()
+        .single();
+      if (error || !data) return null;
+      return rowToReport(data);
     } catch {
       return null;
     }

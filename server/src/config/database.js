@@ -1,15 +1,13 @@
-import mongoose from "mongoose";
+import { createClient } from "@supabase/supabase-js";
 import { env } from "./env.js";
 
-export const connectDatabase = async () => {
+export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+export async function isSupabaseConnected() {
   try {
-    await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-    });
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection error:", error.message);
-    throw error;
+    const { error } = await supabase.from("reports").select("*", { count: "exact", head: true });
+    return !error;
+  } catch {
+    return false;
   }
-};
+}

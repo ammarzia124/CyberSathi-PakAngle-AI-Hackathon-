@@ -8,16 +8,18 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "mongoose": "^8.14.1",
+    "@supabase/supabase-js": "^2.116.0",
+    "axios": "^1.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
+    "mongoose": "^8.14.1",
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
+    "pg": "^8.23.0",
     "tesseract.js": "^5.1.1",
-    "axios": "^1.9.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
