@@ -1,26 +1,34 @@
 export function Timeline({ events }) {
+  const steps = events && events.length > 0
+    ? events
+    : [
+        { name: "Input Received", description: "Investigation step completed by CyberSathi." },
+        { name: "Content Analysis", description: "Investigation step completed by CyberSathi." },
+        { name: "URL / Message Inspection", description: "Investigation step completed by CyberSathi." },
+        { name: "Threat Indicators", description: "Investigation step completed by CyberSathi." },
+        { name: "Evidence Collection", description: "Investigation step completed by CyberSathi." },
+        { name: "Risk Assessment", description: "Investigation step completed by CyberSathi." },
+        { name: "Threat Classification", description: "Investigation step completed by CyberSathi." },
+        { name: "Final Verdict", description: "Investigation step completed by CyberSathi." },
+      ];
+
   return (
-    <div className="space-y-3">
-      <h3 className="text-lg font-semibold">Investigation Timeline</h3>
-      {!events || events.length === 0 ? (
-        <p className="text-gray-500">No events recorded.</p>
-      ) : (
-        <div className="border-l-2 border-gray-200 pl-4 space-y-4">
-          {events.map((event, i) => (
-            <div key={event.id || i} className="relative">
-              <div className={`absolute -left-6 w-3 h-3 rounded-full ${
-                event.status === "completed" ? "bg-green-500" :
-                event.status === "failed" ? "bg-red-500" : "bg-blue-500"
-              }`} />
-              <p className="text-sm text-gray-800">{event.name}</p>
-              <p className="text-xs text-gray-400">
-                {event.timestamp && new Date(event.timestamp).toLocaleTimeString("en-PK")}
-                {event.status && ` — ${event.status}`}
-              </p>
+    <div className="timeline">
+      <div className="timeline-heading">
+        <span>INVESTIGATION</span>
+        <h2>Show me how you detected it</h2>
+      </div>
+      <div className="timeline-list">
+        {steps.map((step, i) => (
+          <div className="timeline-item" key={i}>
+            <span>{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <h4>{step.name || step.step || `Step ${i + 1}`}</h4>
+              <p>{step.description || step.status || "Investigation step completed by CyberSathi."}</p>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

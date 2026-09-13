@@ -2,9 +2,9 @@ export function UrduPanel({ urduExplanation }) {
   if (!urduExplanation) return null;
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4" dir="rtl">
-      <h3 className="text-lg font-semibold mb-2 text-right">اردو وضاحت</h3>
-      <p className="text-gray-700 text-right">{urduExplanation}</p>
+    <div className="urdu-box">
+      <strong>&#x627;&#x631;&#x62f;&#x648; &#x648;&#x636;&#x62d;&#x627;&#x637;</strong>
+      <p>{urduExplanation}</p>
     </div>
   );
 }

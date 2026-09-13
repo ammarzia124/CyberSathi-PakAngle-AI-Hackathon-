@@ -1,9 +1,9 @@
-export function StatsCard({ title, value, subtitle }) {
+export function StatsCard({ icon, title, value, variant }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
-      {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+    <div className={`stat-card ${variant || ""}`}>
+      {icon && <span>{icon}</span>}
+      <h3>{value}</h3>
+      <p>{title}</p>
     </div>
   );
 }

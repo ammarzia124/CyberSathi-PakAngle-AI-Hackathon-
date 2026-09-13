@@ -4,92 +4,121 @@ import { useAnalysis } from "../hooks/useAnalysis.js";
 import UrlInput from "../components/input/UrlInput.jsx";
 import TextInput from "../components/input/TextInput.jsx";
 import FileUpload from "../components/input/FileUpload.jsx";
-import { RiskBadge } from "../components/report/RiskBadge.jsx";
-
-const TABS = [
-  { id: "url", label: "URL" },
-  { id: "message", label: "Message" },
-  { id: "screenshot", label: "Screenshot" },
-];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("url");
+  const [url, setUrl] = useState("");
+  const [message, setMessage] = useState("");
+  const [screenshot, setScreenshot] = useState(null);
   const { loading, error, result, analyzeUrl, analyzeMessage, analyzeScreenshot } = useAnalysis();
   const navigate = useNavigate();
 
-  const handleAnalysisComplete = (data) => {
-    if (data?.reportId) {
-      navigate(`/report/${data.reportId}`);
+  const handleScan = async () => {
+    const trimmedUrl = url.trim();
+    const trimmedMessage = message.trim();
+
+    if (!trimmedUrl && !trimmedMessage && !screenshot) {
+      return;
+    }
+
+    try {
+      let data;
+      if (trimmedUrl) {
+        data = await analyzeUrl(trimmedUrl);
+      } else if (trimmedMessage) {
+        data = await analyzeMessage(trimmedMessage);
+      } else if (screenshot) {
+        data = await analyzeScreenshot(screenshot);
+      }
+
+      if (data?.reportId) {
+        navigate(`/report/${data.reportId}`);
+      }
+    } catch {
+      // error is handled by useAnalysis hook
     }
   };
 
-  const handleUrlSubmit = async (url) => {
-    const data = await analyzeUrl(url);
-    handleAnalysisComplete(data);
-  };
-
-  const handleMessageSubmit = async (text) => {
-    const data = await analyzeMessage(text);
-    handleAnalysisComplete(data);
-  };
-
-  const handleScreenshotUpload = async (file) => {
-    const data = await analyzeScreenshot(file);
-    handleAnalysisComplete(data);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-2xl w-full mx-auto p-8">
-        <h1 className="text-4xl font-bold text-center mb-2">CyberSathi</h1>
-        <p className="text-gray-600 text-center mb-8">
-          AI Digital Safety Agent for Pakistan
-        </p>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex border-b mb-4">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {activeTab === "url" && (
-              <UrlInput onSubmit={handleUrlSubmit} loading={loading} />
-            )}
-            {activeTab === "message" && (
-              <TextInput onSubmit={handleMessageSubmit} loading={loading} />
-            )}
-            {activeTab === "screenshot" && (
-              <FileUpload onUpload={handleScreenshotUpload} loading={loading} />
-            )}
-          </div>
-
-          {result && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg space-y-2">
-              <h3 className="text-sm font-medium text-gray-700">Quick Result</h3>
-              <RiskBadge score={result.riskScore} level={result.threatLevel} />
-              <p className="text-sm text-gray-600">{result.explanation}</p>
-            </div>
-          )}
+    <div className="app">
+      <section className="hero">
+        <div className="hero-content">
+          <span className="badge">
+            AI-Powered Cyber Threat Detection
+          </span>
+          <h1>
+            Stay Safe From
+            <span> Digital Threats</span>
+          </h1>
+          <p>
+            Analyze suspicious links, messages and screenshots with
+            CyberSathi and understand cyber threats in simple language.
+          </p>
+          <button
+            className="primary-btn"
+            onClick={() =>
+              document
+                .getElementById("scan")
+                .scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            Start Security Scan
+          </button>
         </div>
-      </div>
+      </section>
+
+      <section className="scan-section" id="scan">
+        <div className="section-heading">
+          <span>SECURITY SCAN</span>
+          <h2>What would you like to check?</h2>
+          <p>Provide suspicious content and CyberSathi will analyze it.</p>
+        </div>
+
+        <div className="scan-grid">
+          <div className="scan-card">
+            <div className="card-icon">&#x1f517;</div>
+            <h3>Suspicious URL</h3>
+            <p>Check a website or suspicious link.</p>
+            <UrlInput value={url} onChange={setUrl} loading={loading} />
+          </div>
+
+          <div className="scan-card">
+            <div className="card-icon">&#x1f4ac;</div>
+            <h3>Suspicious Message</h3>
+            <p>Analyze a suspicious SMS, email or message.</p>
+            <TextInput value={message} onChange={setMessage} loading={loading} />
+          </div>
+
+          <div className="scan-card">
+            <div className="card-icon">&#x1f4f8;</div>
+            <h3>Screenshot</h3>
+            <p>Upload a screenshot for analysis.</p>
+            <FileUpload onChange={setScreenshot} loading={loading} />
+          </div>
+        </div>
+
+        <div className="scan-action">
+          <button
+            className="scan-btn"
+            onClick={handleScan}
+            disabled={loading || (!url.trim() && !message.trim() && !screenshot)}
+          >
+            {loading ? "Analyzing threat..." : "\uD83D\uDD0D Analyze Threat"}
+          </button>
+        </div>
+
+        {error && <p className="form-error">{error}</p>}
+      </section>
+
+      <section className="about-section" id="about">
+        <div className="section-heading">
+          <span>ABOUT CYBERSATHI</span>
+          <h2>Understand threats before they become harm.</h2>
+          <p>
+            CyberSathi combines clear security analysis with practical guidance
+            so people can make safer decisions about suspicious messages and links.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

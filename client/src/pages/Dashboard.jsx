@@ -5,27 +5,32 @@ import { ThreatChart } from "../components/dashboard/ThreatChart.jsx";
 
 export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);
+  const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchDashboard = async () => {
       try {
-        const data = await api.getAnalytics();
-        setAnalytics(data);
+        const [analyticsData, scansData] = await Promise.all([
+          api.getAnalytics(),
+          api.getScans(1),
+        ]);
+        setAnalytics(analyticsData);
+        setScans(scansData.scans || []);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchAnalytics();
+    fetchDashboard();
   }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading dashboard...</p>
+        <p style={{ color: "#687284" }}>Loading dashboard...</p>
       </div>
     );
   }
@@ -33,73 +38,124 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Error: {error}</p>
+        <p style={{ color: "#dc3545" }}>Error: {error}</p>
       </div>
     );
   }
 
   const dist = analytics?.threatDistribution || {};
-  const distEntries = Object.entries(dist);
+  const high = dist.High || 0;
+  const medium = dist.Suspicious || 0;
+  const low = dist.Low || 0;
+  const safe = dist.Critical || 0;
+
+  const recentScans = scans.slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="app">
+      <section className="dashboard-section">
+        <div className="section-heading">
+          <span>SECURITY DASHBOARD</span>
+          <h2>CyberSathi Analytics</h2>
+          <p>Monitor scans, threats and overall risk distribution.</p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="stats-grid">
           <StatsCard
-            title="Total Scans"
+            icon="&#x1f50d;"
             value={analytics?.totalScans ?? 0}
+            title="Total Scans"
           />
           <StatsCard
-            title="Average Risk Score"
+            icon="&#x1f534;"
+            value={high}
+            title="High Risk"
+            variant="high"
+          />
+          <StatsCard
+            icon="&#x1f7e0;"
+            value={medium}
+            title="Medium Risk"
+            variant="medium"
+          />
+          <StatsCard
+            icon="&#x1f7e1;"
+            value={low}
+            title="Low Risk"
+            variant="low"
+          />
+        </div>
+
+        <div className="stats-grid">
+          <StatsCard
+            icon="&#x1f7e2;"
+            value={safe}
+            title="Safe Scans"
+            variant="safe"
+          />
+          <StatsCard
+            icon="&#x1f4ca;"
             value={analytics?.avgRiskScore != null ? `${analytics.avgRiskScore}/100` : "N/A"}
-          />
-          <StatsCard
-            title="Threat Types"
-            value={distEntries.length}
+            title="Average Risk Score"
           />
         </div>
 
-        {distEntries.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {distEntries.map(([level, count]) => (
-              <StatsCard
-                key={level}
-                title={level}
-                value={count}
-                subtitle="scans"
-              />
-            ))}
-          </div>
-        )}
+        <ThreatChart data={dist} />
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <ThreatChart data={dist} />
-        </div>
+        {recentScans.length > 0 && (
+          <div className="history-card">
+            <div className="history-heading">
+              <h3>Recent Scan History</h3>
+              <span>Live Data</span>
+            </div>
 
-        {analytics?.recentScans && analytics.recentScans.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 space-y-3">
-            <h3 className="text-lg font-semibold">Recent Scans</h3>
-            <div className="divide-y">
-              {analytics.recentScans.map((scan, i) => (
-                <div key={i} className="py-2 flex items-center justify-between">
-                  <span className="text-sm text-gray-700">{scan.inputType}</span>
-                  <span className="text-sm font-medium">{scan.riskScore}/100</span>
-                  <span className={`text-sm px-2 py-0.5 rounded ${
-                    scan.threatLevel === "Critical" ? "bg-red-100 text-red-800" :
-                    scan.threatLevel === "High" ? "bg-orange-100 text-orange-800" :
-                    scan.threatLevel === "Suspicious" ? "bg-yellow-100 text-yellow-800" :
-                    "bg-green-100 text-green-800"
-                  }`}>
-                    {scan.threatLevel}
-                  </span>
-                </div>
-              ))}
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Scan ID</th>
+                    <th>Type</th>
+                    <th>Threat</th>
+                    <th>Risk</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentScans.map((scan, i) => {
+                    const riskLevel = scan.threatLevel || "Safe";
+                    const levelLower = riskLevel.toLowerCase();
+                    const statusClass =
+                      levelLower === "high"
+                        ? "high-status"
+                        : levelLower === "medium" || levelLower === "suspicious"
+                          ? "medium-status"
+                          : levelLower === "low"
+                            ? "low-status"
+                            : "safe-status";
+                    return (
+                      <tr key={scan.reportId || i}>
+                        <td>#{`CS-${(scan.reportId || "").slice(0, 4).toUpperCase()}`}</td>
+                        <td>{scan.inputType}</td>
+                        <td>{scan.threatType}</td>
+                        <td>{scan.riskScore}/100</td>
+                        <td>
+                          <span className={`status ${statusClass}`}>{riskLevel}</span>
+                        </td>
+                        <td>
+                          {scan.createdAt
+                            ? new Date(scan.createdAt).toLocaleString()
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

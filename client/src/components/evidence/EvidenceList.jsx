@@ -1,14 +1,20 @@
 export function EvidenceList({ indicators }) {
   return (
-    <div className="space-y-3">
-      <h3 className="text-lg font-semibold">Evidence</h3>
+    <div className="result-card">
+      <h3>&#x1f6a9; Red Flags / Evidence</h3>
       {indicators.length === 0 ? (
-        <p className="text-gray-500">No indicators found.</p>
+        <div className="evidence-item">
+          <strong>No indicators reported</strong>
+          <p>The backend did not return any evidence for this scan.</p>
+        </div>
       ) : (
         indicators.map((indicator, i) => (
-          <div key={i} className="border rounded p-4">
-            <span className="font-medium">{indicator.type}</span>
-            <p className="text-sm text-gray-600">{indicator.description}</p>
+          <div className="evidence-item" key={i}>
+            <strong>{indicator.description || indicator.type || "Indicator"}</strong>
+            <p>
+              Source: {indicator.source || "unknown"}
+              {indicator.severity && ` | Severity: ${indicator.severity}`}
+            </p>
           </div>
         ))
       )}
