@@ -130,43 +130,31 @@ describe("InvestigationTimeline", () => {
   });
 
   describe("toJSON", () => {
-    it("returns correct structure", () => {
+    it("returns flat array with correct event shape", () => {
       const timeline = new InvestigationTimeline();
       timeline.start();
       timeline.addStep(1, "completed");
       timeline.addStep(2, "completed");
       const json = timeline.toJSON();
 
-      expect(json).toHaveProperty("events");
-      expect(json).toHaveProperty("startedAt");
-      expect(json).toHaveProperty("completedAt");
-      expect(Array.isArray(json.events)).toBe(true);
-      expect(json.events).toHaveLength(2);
-      expect(json.startedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-      expect(json.completedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    });
-
-    it("sets completedAt if not already set", () => {
-      const timeline = new InvestigationTimeline();
-      timeline.start();
-      const json = timeline.toJSON();
-      expect(json.completedAt).toBeTruthy();
-    });
-
-    it("preserves existing completedAt", () => {
-      const timeline = new InvestigationTimeline();
-      timeline.start();
-      timeline.completedAt = "2025-01-01T00:00:00.000Z";
-      const json = timeline.toJSON();
-      expect(json.completedAt).toBe("2025-01-01T00:00:00.000Z");
+      expect(Array.isArray(json)).toBe(true);
+      expect(json).toHaveLength(2);
+      expect(json[0]).toHaveProperty("id");
+      expect(json[0]).toHaveProperty("name");
+      expect(json[0]).toHaveProperty("timestamp");
+      expect(json[0]).toHaveProperty("status");
+      expect(json[0]).toHaveProperty("metadata");
+      expect(json[0].id).toBe("step-1");
+      expect(json[0].name).toBe("Input received + type identified");
+      expect(json[0].status).toBe("completed");
     });
 
     it("returns copies of events not references", () => {
       const timeline = new InvestigationTimeline();
       timeline.addStep(1, "completed");
       const json = timeline.toJSON();
-      json.events[0].step = 999;
-      expect(timeline.events[0].step).toBe(1);
+      json[0].name = "Modified";
+      expect(timeline.events[0].name).toBe("Input received + type identified");
     });
   });
 
@@ -243,9 +231,12 @@ describe("InvestigationTimeline", () => {
       timeline.addStep(8, "completed", {});
 
       const json = timeline.toJSON();
-      expect(json.events).toHaveLength(8);
-      expect(json.events.map((e) => e.step)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
-      expect(json.events.every((e) => e.status === "completed")).toBe(true);
+      expect(json).toHaveLength(8);
+      expect(json.map((e) => e.id)).toEqual([
+        "step-1", "step-2", "step-3", "step-4",
+        "step-5", "step-6", "step-7", "step-8",
+      ]);
+      expect(json.every((e) => e.status === "completed")).toBe(true);
     });
 
     it("handles mixed completed and failed steps", () => {
@@ -262,8 +253,8 @@ describe("InvestigationTimeline", () => {
       timeline.addStep(8, "completed");
 
       const json = timeline.toJSON();
-      expect(json.events).toHaveLength(8);
-      const step3 = json.events.find((e) => e.step === 3);
+      expect(json).toHaveLength(8);
+      const step3 = json.find((e) => e.id === "step-3");
       expect(step3.status).toBe("failed");
       expect(step3.metadata.reason).toBe("Timeout");
     });
@@ -281,7 +272,7 @@ describe("InvestigationTimeline", () => {
         .completeStep(8, {})
         .toJSON();
 
-      expect(result.events).toHaveLength(8);
+      expect(result).toHaveLength(8);
     });
   });
 });

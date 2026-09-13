@@ -1,7 +1,7 @@
 import { Report } from "../models/Report.js";
 import { ReportService } from "../services/ReportService.js";
 import { UrduTranslationService } from "../services/UrduTranslationService.js";
-import { NotFoundError } from "../utils/errors.js";
+import { NotFoundError, ValidationError } from "../utils/errors.js";
 import mongoose from "mongoose";
 
 function isDbConnected() {
@@ -19,13 +19,13 @@ export function createReportController(deps = {}) {
     }
 
     try {
-      const report = await reportModel.findById(req.params.id).lean();
+      const reportId = req.params.id;
+      const report = await reportService.findByReportId(reportId);
       if (!report) {
         throw new NotFoundError("Report");
       }
 
-      const { _id, __v, ...shape } = report;
-      res.json(shape);
+      res.json(report);
     } catch (error) {
       next(error);
     }
@@ -37,7 +37,8 @@ export function createReportController(deps = {}) {
     }
 
     try {
-      const report = await reportModel.findById(req.params.id).lean();
+      const reportId = req.params.id;
+      const report = await reportService.findByReportId(reportId);
       if (!report) {
         throw new NotFoundError("Report");
       }
@@ -60,7 +61,7 @@ export function createReportController(deps = {}) {
         : translation.explanation;
 
       const updated = await reportService.updateUrduExplanation(
-        report.reportId,
+        reportId,
         urduText
       );
 

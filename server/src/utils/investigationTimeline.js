@@ -108,11 +108,13 @@ export class InvestigationTimeline {
     if (!this.completedAt) {
       this.completedAt = new Date().toISOString();
     }
-    return {
-      events: this.events.map((e) => ({ ...e })),
-      startedAt: this.startedAt,
-      completedAt: this.completedAt,
-    };
+    return this.events.map((e) => ({
+      id: `step-${e.step}`,
+      name: e.name,
+      timestamp: e.timestamp,
+      status: e.status,
+      metadata: e.metadata || {},
+    }));
   }
 }
 

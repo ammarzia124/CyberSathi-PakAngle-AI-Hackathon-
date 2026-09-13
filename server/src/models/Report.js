@@ -29,9 +29,10 @@ const ReportSchema = new mongoose.Schema(
     investigationTimeline: [
       {
         id: { type: String },
+        name: { type: String },
         timestamp: { type: String },
-        event: { type: String },
-        source: { type: String },
+        status: { type: String },
+        metadata: { type: mongoose.Schema.Types.Mixed },
       },
     ],
     urduExplanation: { type: String, default: null },

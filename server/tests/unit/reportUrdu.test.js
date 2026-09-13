@@ -14,16 +14,9 @@ afterAll(() => {
   mongoose.connection.readyState = originalReadyState;
 });
 
-function createMockReportModel(findResult) {
+function createMockReportService(findResult, updateResult) {
   return {
-    findById: () => ({
-      lean: async () => findResult,
-    }),
-  };
-}
-
-function createMockReportService(updateResult) {
-  return {
+    findByReportId: async () => findResult,
     updateUrduExplanation: async () => updateResult,
   };
 }
@@ -41,12 +34,11 @@ function createMockRes() {
   return res;
 }
 
-function createMockReq(id = "507f1f77bcf86cd799439011") {
+function createMockReq(id = "test-report-001") {
   return { params: { id } };
 }
 
 const sampleReport = {
-  _id: "507f1f77bcf86cd799439011",
   reportId: "test-report-001",
   inputType: "url",
   riskScore: 75,
@@ -73,8 +65,7 @@ describe("Report Urdu Endpoint", () => {
       const updatedReport = { ...sampleReport, urduExplanation: "یہ URL فishing کی کوشش لگتا ہے۔\n\nتوصیات:\n1. اس URL پر نہ جائیں۔\n2. حکومتی اداروں کو رپورٹ کریں۔" };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(sampleReport, updatedReport),
         urduService: createMockUrduService(urduTranslation),
       });
 
@@ -93,8 +84,7 @@ describe("Report Urdu Endpoint", () => {
 
     it("returns 404 for missing report", async () => {
       const controller = createReportController({
-        reportModel: createMockReportModel(null),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(null, null),
         urduService: createMockUrduService(null),
       });
 
@@ -111,8 +101,7 @@ describe("Report Urdu Endpoint", () => {
 
     it("returns 503 when translation fails (null result)", async () => {
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(sampleReport, null),
         urduService: createMockUrduService(null),
       });
 
@@ -129,8 +118,7 @@ describe("Report Urdu Endpoint", () => {
 
     it("returns 503 on translation timeout (service throws)", async () => {
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(sampleReport, null),
         urduService: {
           translate: async () => {
             throw new Error("Translation timed out");
@@ -150,8 +138,7 @@ describe("Report Urdu Endpoint", () => {
     it("does not corrupt report when translation fails", async () => {
       const reportWithUrdu = { ...sampleReport, urduExplanation: "existing translation" };
       const controller = createReportController({
-        reportModel: createMockReportModel(reportWithUrdu),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(reportWithUrdu, null),
         urduService: createMockUrduService(null),
       });
 
@@ -174,8 +161,7 @@ describe("Report Urdu Endpoint", () => {
       const updatedReport = { ...reportWithUrdu, urduExplanation: "نئی ترجمہ\n\nتوصیات:\n1. نئی توصیہ" };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(reportWithUrdu),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(reportWithUrdu, updatedReport),
         urduService: createMockUrduService(newTranslation),
       });
 
@@ -193,8 +179,7 @@ describe("Report Urdu Endpoint", () => {
       mongoose.connection.readyState = 0;
 
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(sampleReport, null),
         urduService: createMockUrduService(null),
       });
 
@@ -212,8 +197,7 @@ describe("Report Urdu Endpoint", () => {
 
     it("returns 500 when persisting translation fails", async () => {
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(null),
+        reportService: createMockReportService(sampleReport, null),
         urduService: createMockUrduService({
           explanation: "ترجمہ",
           recommendedActions: [],
@@ -243,8 +227,7 @@ describe("Report Urdu Endpoint", () => {
       const updatedReport = { ...reportWithUrl, urduExplanation: translation.explanation };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(reportWithUrl),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(reportWithUrl, updatedReport),
         urduService: createMockUrduService(translation),
       });
 
@@ -265,8 +248,7 @@ describe("Report Urdu Endpoint", () => {
       const updatedReport = { ...sampleReport, urduExplanation: translation.explanation };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(sampleReport, updatedReport),
         urduService: createMockUrduService(translation),
       });
 
@@ -290,8 +272,7 @@ describe("Report Urdu Endpoint", () => {
       };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(sampleReport, updatedReport),
         urduService: createMockUrduService(translation),
       });
 
@@ -314,8 +295,7 @@ describe("Report Urdu Endpoint", () => {
       const updatedReport = { ...sampleReport, urduExplanation: "صرف وضاحت" };
 
       const controller = createReportController({
-        reportModel: createMockReportModel(sampleReport),
-        reportService: createMockReportService(updatedReport),
+        reportService: createMockReportService(sampleReport, updatedReport),
         urduService: createMockUrduService(translation),
       });
 
