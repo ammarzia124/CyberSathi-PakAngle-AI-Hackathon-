@@ -107,5 +107,98 @@ export function matchPatterns(text) {
     riskScore = Math.max(riskScore, 50);
   }
 
+  const patterns = MESSAGE_ANALYZER_CONSTANTS.PAKISTAN_SCAM_PATTERNS;
+
+  const hasHecKeyword = patterns.HEC_IMPERSONATION.keywords.some((k) => lowerText.includes(k));
+  const hasHecScamIndicator = patterns.HEC_IMPERSONATION.scamIndicators.some((s) => lowerText.includes(s));
+  if (hasHecKeyword && hasHecScamIndicator) {
+    indicators.push({
+      type: "impersonation-scam",
+      severity: "critical",
+      description: patterns.HEC_IMPERSONATION.description,
+      evidence: `HEC + scam indicator`,
+    });
+    signals.push("impersonation:hec");
+    riskScore = Math.max(riskScore, patterns.HEC_IMPERSONATION.score);
+  }
+
+  const hasPlatform = patterns.EASYPAISA_JAZZCASH_PRIZE.platforms.some((p) => lowerText.includes(p));
+  const hasPrizeIndicator = patterns.EASYPAISA_JAZZCASH_PRIZE.scamIndicators.some((s) => lowerText.includes(s));
+  if (hasPlatform && hasPrizeIndicator) {
+    indicators.push({
+      type: "financial-scam",
+      severity: "critical",
+      description: patterns.EASYPAISA_JAZZCASH_PRIZE.description,
+      evidence: `Platform + prize/lottery indicator`,
+    });
+    signals.push("financial-scam:prize");
+    riskScore = Math.max(riskScore, patterns.EASYPAISA_JAZZCASH_PRIZE.score);
+  }
+
+  const hasScholarshipKeyword = patterns.SCHOLARSHIP_FEE.keywords.some((k) => lowerText.includes(k));
+  const hasFeeIndicator = patterns.SCHOLARSHIP_FEE.feeIndicators.some((f) => lowerText.includes(f));
+  if (hasScholarshipKeyword && hasFeeIndicator) {
+    indicators.push({
+      type: "financial-scam",
+      severity: "high",
+      description: patterns.SCHOLARSHIP_FEE.description,
+      evidence: `Scholarship + fee request`,
+    });
+    signals.push("financial-scam:scholarship");
+    riskScore = Math.max(riskScore, patterns.SCHOLARSHIP_FEE.score);
+  }
+
+  const hasCourier = patterns.COURIER_PAYMENT.couriers.some((c) => lowerText.includes(c));
+  const hasDeliveryScam = patterns.COURIER_PAYMENT.scamIndicators.some((s) => lowerText.includes(s));
+  if (hasCourier && hasDeliveryScam) {
+    indicators.push({
+      type: "financial-scam",
+      severity: "high",
+      description: patterns.COURIER_PAYMENT.description,
+      evidence: `Courier + payment/delivery scam`,
+    });
+    signals.push("financial-scam:courier");
+    riskScore = Math.max(riskScore, patterns.COURIER_PAYMENT.score);
+  }
+
+  const hasSocialPlatform = patterns.SOCIAL_MEDIA_OTP.platforms.some((p) => lowerText.includes(p));
+  const hasOtpScam = patterns.SOCIAL_MEDIA_OTP.scamIndicators.some((s) => lowerText.includes(s));
+  if (hasSocialPlatform && hasOtpScam) {
+    indicators.push({
+      type: "credential-harvesting",
+      severity: "critical",
+      description: patterns.SOCIAL_MEDIA_OTP.description,
+      evidence: `Social media + OTP/verification request`,
+    });
+    signals.push("credential-harvesting:social-media");
+    riskScore = Math.max(riskScore, patterns.SOCIAL_MEDIA_OTP.score);
+  }
+
+  const hasBank = patterns.BANK_VERIFICATION.banks.some((b) => lowerText.includes(b.toLowerCase()));
+  const hasBankScam = patterns.BANK_VERIFICATION.scamIndicators.some((s) => lowerText.includes(s));
+  if (hasBank && hasBankScam) {
+    indicators.push({
+      type: "phishing",
+      severity: "critical",
+      description: patterns.BANK_VERIFICATION.description,
+      evidence: `Bank name + security alert scam`,
+    });
+    signals.push("phishing:bank");
+    riskScore = Math.max(riskScore, patterns.BANK_VERIFICATION.score);
+  }
+
+  const hasJobKeyword = patterns.JOB_OFFER.keywords.some((k) => lowerText.includes(k));
+  const hasRemoteIndicator = patterns.JOB_OFFER.remoteIndicators.some((r) => lowerText.includes(r));
+  if (hasJobKeyword && hasRemoteIndicator) {
+    indicators.push({
+      type: "scam",
+      severity: "high",
+      description: patterns.JOB_OFFER.description,
+      evidence: `Job offer + remote/work-from-home`,
+    });
+    signals.push("scam:job-offer");
+    riskScore = Math.max(riskScore, patterns.JOB_OFFER.score);
+  }
+
   return { indicators, signals, riskScore, extractedUrls };
 }
